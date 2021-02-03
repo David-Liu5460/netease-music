@@ -28,7 +28,10 @@ function HYRecommend(props) {
         <HYNewAlbum/>
         <HYRecommendRanking/>
       </RecommendLeft>
-      <RecommendRight></RecommendRight>
+      <RecommendRight>
+        HYUserLogin
+        ....
+      </RecommendRight>
       </Content>
     </RecommendWrapper>
   ) 
