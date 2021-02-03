@@ -19,7 +19,7 @@ const changeCurrentSongIndexAction = (index) => ({
   index
 });
 
-const changeLyricListAction = (lyricList) => ({
+export const changeCurrentLyricListAction = (lyricList) => ({
   type: actionTypes.CHANGE_LYRIC_LIST,
   lyricList
 }); 
@@ -29,6 +29,11 @@ export const changeSequenceAction = (sequence) => ({
   type: actionTypes.CHANGE_SEQUENCE,
   sequence
 });
+
+export const changeCurrentLyricIndex = (index) => {
+  type: actionTypes.CHANGE_CURRENT_LYRIC_INDEX,
+  index
+};
 
 export const getLyricAction = (id) => {
   return dispatch => {

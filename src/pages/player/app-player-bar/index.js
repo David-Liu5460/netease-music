@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useEffect } from 'react'
 
-import { Slider } from "antd";
+import { Slider, Open } from "antd";
 
 import {
   PlaybarWrapper,
@@ -12,7 +12,7 @@ import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import { getSizeImage, formatDate, getPlaySong } from "@/utils/format-utils";
 
-import { changeCurrentSong, getSongDetailAction } from '../store/actionCreator';
+import { changeCurrentSong, getSongDetailAction, changeCurrentLyricIndexAction, changeCurrentLyricIndex } from '../store/actionCreator';
 import { changeSequenceAction } from '../store/actionCreator';
 
 export default memo(function HYAppPlayer() {
@@ -23,10 +23,12 @@ export default memo(function HYAppPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
 
   // redux-hook
-  const {currentSong, sequence} = useSelector(state => {
-    currentSong: state.getIn(['player', 'currentSong']);
-    sequence: state.getIn(["player", "sequence"]);
-  }, shallowEqual)
+  const {currentSong, sequence, lyricList, currentIndex} = useSelector(state => ({
+    currentSong: state.getIn(['player', 'currentSong']),
+    sequence: state.getIn(["player", "sequence"]),
+    lyricList: state.getIn(["player", "lyricList"]),
+    currentIndex: state.getIn(["player", "currentLyricIndex"]);
+  }), shallowEqual)
   // redux-hooks
   const dispatch = useDispatch();
 
@@ -60,12 +62,35 @@ export default memo(function HYAppPlayer() {
   }, [isPlaying]);
 
   const timeUpdate = (e) => {
+    const currentTime = e.target.currentTime;
     console.log(e.targer.currentTime);   
     if (!isChanging) {
       // setProgress()
       setcurrentTime(e.target.currentTime * 1000);
-      setProgress(currentTime / duration * 100);
+      setProgress(currentTime * 1000 / duration * 100);
     }  
+    // 获取当前歌词
+    let currentLyricIndex = 0;
+    for (let i = 0; i < lyricList.length; i++) {
+      let lyricItem = lyricList[i];
+      if (currentTime * 1000 < lyricItem.time) {
+        currentLyricIndex = i;
+        break;
+      }
+    }
+    console.log(lyricList[currentLyricIndex-1]);
+
+    if (currentIndex !== currentLyricIndex - 1) {
+      dispatch(changeCurrentLyricIndex(currentLyricIndex-1));
+      console.log(lyricList[currentLyricIndex-1]);
+      const content = lyricList[currentLyricIndex-1] && lyricList[currentLyricIndex-1].content; 
+      message.open({
+        key: "lyric",
+        content: content,
+        duration: 0,
+        className: "lyric-class"
+      })
+    }
   }
 
   const changeSequence = () => {
@@ -73,7 +98,7 @@ export default memo(function HYAppPlayer() {
     if(currentSequence > 2) {
       currentSequence = 0;
     }
-    dispatch(changeSequenceAction(currentSequence));
+    dispatch(changeSequenceAction(currentSequence-1));
   }
 
   const changeMusic = (tag) => {
