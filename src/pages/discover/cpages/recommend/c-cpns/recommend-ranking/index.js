@@ -17,6 +17,12 @@ export default memo(function HYRecommendRanking() {
 
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    dispatch(getTopList(0));
+    dispatch(getTopList(2));
+    dispatch(getTopList(3));
+  }, [dispatch]);
+
   return (
     <RankingWrapper>
       <HYThemeHeaderRCM title="榜单" ></HYThemeHeaderRCM> 

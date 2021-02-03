@@ -26,7 +26,7 @@ export function parseLyric(lyricString) {
       const time2 = result[2] * 1000;
       const time3 = result[3].length === 3? result[3]*1: result[3]*10;
       const time = time1 + time2 + time3;
-      const content = line.replace(parseExp, "").trim();
+      const content = line.replace(parseExp, "").trim(); 
       const lineObj = {time, content};
       lyrics.push(lineObj);
     }

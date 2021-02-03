@@ -2,11 +2,24 @@ import React, { memo } from 'react';
 
 import { getSizeImage } from '@/utils';
 
+import { getSongDetailetion} from "@/pages/player/store/actionCreators";
+
 import { TopRankingWrapper } from './style';
+import { useDispatch } from 'react-redux';
 
 export default memo(function () {
+  // props 
   const { info } = props;
   const { tracks = [] } = info;
+
+  // redux hooks
+  const dispatch = useDispatch();
+
+  // other handle
+  const playMusic = (item) => {
+    console.log(item.id);
+    dispatch(getSongDetailetion(item.id));
+  }
 
   return (
     <TopRankingWrapper>
@@ -31,7 +44,7 @@ export default memo(function () {
                 <div className="info">
                   <div className="name">{item.name}</div>
                   <div className="btn sprite">
-                    <button className="btn sprite_02 play"></button>
+                    <button className="btn sprite_02 play" onClick={e => {playMusic(item)}}></button>
                     <button className="btn sprite_icon2 addto"></button>
                     <button className="btn sprite_02 favor"></button>
                   </div>

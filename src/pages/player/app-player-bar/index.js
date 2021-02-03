@@ -1,4 +1,4 @@
-import React, { memo, useEffect } from 'react'
+import React, { memo, useCallback, useEffect } from 'react'
 
 import { Slider } from "antd";
 
@@ -12,7 +12,8 @@ import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
 import { getSizeImage, formatDate, getPlaySong } from "@/utils/format-utils";
 
-import { getSongDetailAction } from '../store/actionCreators';
+import { changeCurrentSong, getSongDetailAction } from '../store/actionCreator';
+import { changeSequenceAction } from '../store/actionCreator';
 
 export default memo(function HYAppPlayer() {
   // props state
@@ -22,8 +23,9 @@ export default memo(function HYAppPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
 
   // redux-hook
-  const {currentSong} = useSelector(state => {
+  const {currentSong, sequence} = useSelector(state => {
     currentSong: state.getIn(['player', 'currentSong']);
+    sequence: state.getIn(["player", "sequence"]);
   }, shallowEqual)
   // redux-hooks
   const dispatch = useDispatch();
@@ -36,6 +38,11 @@ export default memo(function HYAppPlayer() {
 
   useEffect(() => {
     audioRef.current.src = getPlaySong(currentSong.id); 
+    audioRef.current.play().then(res => {
+      setIsPlaying(true);
+    }).catch(err => {
+      setIsChanging(false);
+    });
   }, [currentSong]);
 
   // otherHandel
@@ -47,10 +54,10 @@ export default memo(function HYAppPlayer() {
   // const progress = currentTime / duration * 100;
   
   // handle function
-  const playMusic = () => {
+  const playMusic = useCallback(() => {
     isPlaying ? audioRef.current.pause() : audioRef.current.play();
     setIsPlaying(!isPlaying);
-  }
+  }, [isPlaying]);
 
   const timeUpdate = (e) => {
     console.log(e.targer.currentTime);   
@@ -59,6 +66,18 @@ export default memo(function HYAppPlayer() {
       setcurrentTime(e.target.currentTime * 1000);
       setProgress(currentTime / duration * 100);
     }  
+  }
+
+  const changeSequence = () => {
+    let currentSequence = sequence + 1;
+    if(currentSequence > 2) {
+      currentSequence = 0;
+    }
+    dispatch(changeSequenceAction(currentSequence));
+  }
+
+  const changeMusic = (tag) => {
+    changeCurrentSong(tag);
   }
 
   const sliderChange = useCallback((value) => {
@@ -84,19 +103,30 @@ export default memo(function HYAppPlayer() {
     }
   }, [duration, isPlaying, playMusic]);
 
+  const handleMusicEnded = () => {
+    if (sequence === 2) {
+      audioRef.current.currentTime = 0;
+      audioRef.current.play();
+    } else {
+      dispatch(changeCurrentSong(1));
+    }
+  }
+
   return (
     <PlaybarWrapper className="sprite_player">
       <div className="content wrap-v2 ">
         <Control isPlaying={isPlaying}>
-          <button className="sprite_player prev"></button>
+          <button className="sprite_player prev"
+                  onClick={e => changeMusic(-1)}></button>
           <button className="sprite_player play" onClick={e => playMusic()}></button>
-          <button className="sprite_player next"></button>
+          <button className="sprite_player next"
+                  onClick={e => changeMusic(1)}></button>
         </Control>
         <PlayInfo>
           <div href="/#">
-            <a href="/#">
+            <NavLink to="/discover/player">
               <img src={picUrl} />
-            </a>
+            </NavLink>
           </div>
           <div className="info">
             <div className="song"> 
@@ -104,9 +134,11 @@ export default memo(function HYAppPlayer() {
               <a href="#/" className="singer-name">{SingerName}</a>
             </div>
             <div className="progress">
-              <Slider defaultValue={30} value={progress}
-                  onChange={sliderChange}
-                  onAfterChange={sliderAfterChange}></Slider>
+              <Slider 
+                defaultValue={30} 
+                value={progress}
+                onChange={sliderChange}
+                onAfterChange={sliderAfterChange}></Slider>
               <div className="time">
                 <span className="now-time">{showCurrentTime}</span>
                 <span className="divider">/</span>
@@ -115,14 +147,16 @@ export default memo(function HYAppPlayer() {
             </div>
           </div>
         </PlayInfo>
-        <Operator>
+        <Operator sequence={sequence}>
             <button className="sprite_player btn volume"></button>
-            <button className="sprite_player btn loop"></button>
+            <button className="sprite_player btn loop" onClick={e => changeSequence()}></button>
             <button className="sprite_player btn playlist"></button> 
         </Operator>
       </div>
       <h2>HYAppPlayer</h2>
-      <audio ref={audioRef} onTimeUpdate={timeUpdate}></audio>
+      <audio ref={audioRef} 
+            onTimeUpdate={timeUpdate} 
+            onEnded={handleMusicEnded}></audio>
     </PlaybarWrapper>
   )
 })
